@@ -167,3 +167,114 @@ def insert_candidate(candidate_vacancy_title, candidate_name, candidate_gender, 
                 showerror(title='Ошибка', message=f'{error}')
         except Exception as error:
             showerror(title='Ошибка', message=f'{error}')
+
+#Обновление данных в 'Vacancy'
+def update_vacancy_query(vacancy_old_title, vacancy_title, vacancy_description, vacancy_status, vacancy_salary):
+    if vacancy_title == '' or vacancy_description == '' or vacancy_status == '' or vacancy_salary == '':
+        showerror(title='Ошибка', message='Заполните все поля')
+    else:
+        try:
+            query_select_id = f"SELECT id FROM vacancy WHERE title='{vacancy_old_title}'"
+            result = session.execute(query_select_id)
+            ids = [row[0] for row in result.all()]
+            try:
+                query_update = f"UPDATE vacancy SET title='{vacancy_title}', description='{vacancy_description}', status={bool(vacancy_status)}, salary={int(vacancy_salary)} WHERE id={ids[0]}"
+                session.execute(query_update)
+                showinfo(title='Инфо', message='Данные успешно обновлены')
+            except Exception as error:
+                showerror(title='Ошибка', message=f'{error}')
+        except Exception as error:
+            showerror(title='Ошибка', message=f'{error}')
+
+#Обновление данных в 'Employer'
+def update_employer_query(employer_old_title, employer_vacancy, employer_title, employer_description, employer_address):
+    if employer_title == '' or employer_description == '' or employer_address == '':
+        showerror(title='Ошибка', message='Заполните все поля')
+    else:
+        try:
+            query_select_id = f"SELECT id FROM employer WHERE title='{employer_old_title}'"
+            result = session.execute(query_select_id)
+            ids = [row[0] for row in result.all()]
+            try:
+                query_choose_vacancy_id = f"SELECT id FROM vacancy WHERE title='{employer_vacancy}'"
+                result = session.execute(query_choose_vacancy_id)
+                ids_vacancy = [row[0] for row in result.all()]
+                try:
+                    query_update = f"UPDATE employer SET title='{employer_title}', description='{employer_description}', address='{employer_address}', vacancy_id={ids_vacancy[0]} WHERE id={ids[0]}"
+                    session.execute(query_update)
+                    showinfo(title='Инфо', message='Данные успешно обновлены')
+                except Exception as error:
+                    showerror(title='Ошибка', message=f'{error}')
+            except Exception as error:
+                showerror(title='Ошибка', message=f'{error}')
+        except Exception as error:
+            showerror(title='Ошибка', message=f'{error}')
+
+#Обновление данных в 'Candidate'
+def update_candidate_query(candidate_old_name, candidate_vacancy, candidate_name, candidate_gender, candidate_date):
+    if candidate_name == '' or candidate_gender == '' or candidate_date == '' or candidate_vacancy == '':
+        showerror(title='Ошибка', message='Заполните все поля')
+    else:
+        try:
+            query_select_id = f"SELECT id FROM candidate WHERE name='{candidate_old_name}'"
+            result = session.execute(query_select_id)
+            ids = [row[0] for row in result.all()]
+            try:
+                query_choose_vacancy_id = f"SELECT id FROM vacancy WHERE title='{candidate_vacancy}'"
+                result = session.execute(query_choose_vacancy_id)
+                ids_vacancy = [row[0] for row in result.all()]
+                try:
+                    query_update = f"UPDATE candidate SET name='{candidate_name}', gender='{candidate_gender}', dateofbirth='{candidate_date}', vacancy_id={ids_vacancy[0]} WHERE id={ids[0]}"
+                    session.execute(query_update)
+                    showinfo(title='Инфо', message='Данные успешно обновлены')
+                except Exception as error:
+                    showerror(title='Ошибка', message=f'{error}')
+            except Exception as error:
+                showerror(title='Ошибка', message=f'{error}')
+        except Exception as error:
+            showerror(title='Ошибка', message=f'{error}')
+
+
+#Удаление данных в 'Vacancy'
+def delete_vacancy_query(title):
+    select_id = f"SELECT id FROM vacancy WHERE title='{title}'"
+    result = session.execute(select_id)
+    ids = [row[0] for row in result.all()]
+    delete_from_vacancy = f"DELETE FROM vacancy WHERE id={ids[0]}"
+    session.execute(delete_from_vacancy)
+
+    ids_employer = f"SELECT id FROM employer WHERE vacancy_id={ids[0]}"
+    result_ids_employer = session.execute(ids_employer)
+    employer_vacancy_ids = [row[0] for row in result_ids_employer.all()]
+    for i in range(0, len(employer_vacancy_ids)):
+        delete_from_employer = f"DELETE FROM employer WHERE id={employer_vacancy_ids[i]}"
+        session.execute(delete_from_employer)
+    
+    ids_candidate = f"SELECT id FROM candidate WHERE vacancy_id={ids[0]}"
+    result_ids_candidate = session.execute(ids_candidate)
+    candidate_vacancy_ids = [row[0] for row in result_ids_candidate.all()]
+    for i in range(0, len(candidate_vacancy_ids)):
+        delete_from_candidate = f"DELETE FROM candidate WHERE id={candidate_vacancy_ids[i]}"
+        session.execute(delete_from_candidate)
+
+    showinfo(title='Инфо', message='Данные успешно удалены')
+
+#Удаление данных в 'Employer'
+def delete_employer_query(title):
+    select_id = f"SELECT id FROM employer WHERE title='{title}'"
+    result = session.execute(select_id)
+    ids = [row[0] for row in result.all()]
+
+    delete_query = f"DELETE FROM employer WHERE id={ids[0]}"
+    session.execute(delete_query)
+    showinfo(title='Инфо', message='Данные успешно удалены')
+
+#Удаление данных в 'Candidate'
+def delete_candidate_query(name):
+    select_id = f"SELECT id FROM candidate WHERE name='{name}'"
+    result = session.execute(select_id)
+    ids = [row[0] for row in result.all()]
+
+    delete_query = f"DELETE FROM candidate WHERE id={ids[0]}"
+    session.execute(delete_query)
+    showinfo(title='Инфо', message='Данные успешно удалены')
