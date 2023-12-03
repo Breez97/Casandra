@@ -2,6 +2,7 @@ from windows import *
 
 packs = []
 
+
 def ui():
     root = Tk()
     root['bg'] = '#CCCCFF'
@@ -11,6 +12,7 @@ def ui():
     main_window(root, packs)
 
     root.mainloop()
+
 
 def main():
     ui()
