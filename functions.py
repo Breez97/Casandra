@@ -72,7 +72,7 @@ def insert_vacancy(vacancy_title, vacancy_description, vacancy_status, vacancy_s
             session.execute(query_index)
             try:
                 query_vacancy_title = f"SELECT * FROM vacancy WHERE title='{vacancy_title}'"
-                result_select_title = session.execute(fquery_vacancy_title)
+                result_select_title = session.execute(query_vacancy_title)
                 titles = [row[1] for row in result_select_title.all()]
                 if len(titles) == 0:
                     try:
