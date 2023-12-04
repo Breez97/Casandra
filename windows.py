@@ -47,7 +47,7 @@ def main_window(root, packs):
     packs.append(button_insert)
 
     #Кнопка "SELECT"
-    button_select = Button(root, text='Выборка данных (SELECT)', command=button_select_clicked)
+    button_select = Button(root, text='Выборка данных (Запросы)', command=button_select_clicked)
     button_select.pack(pady=10)
     button_select.config(font='Arial 12 bold', bg='#CCCCFF')
     packs.append(button_select)
@@ -724,11 +724,6 @@ def delete_window_query(root, packs, title):
 
     clear_packs(packs)
 
-    root.title(f'Обновление данных в {title}')
-    main_label = Label(root, text=f'Выбрана: {title}', font='Arial 12 bold', bg='#CCCCFF')
-    main_label.pack(pady=10)
-    packs.append(main_label)
-
     y_size = 120
     root.geometry(f'600x{y_size}+{(root.winfo_screenwidth() - 450) // 2}+{(root.winfo_screenheight() - y_size) // 2}')
 
@@ -893,42 +888,244 @@ def delete_window_query(root, packs, title):
 #Окно выборки данных
 def select_window(root, packs):
 
-    def button_make_select_clicked():
-        result_list.configure(state='normal')
-        result_list.delete(1.0, END)
-
-        query = select_entry.get()
-        query_result = query_processing(query)
-
-        result_list.insert(END, query_result)
-        result_list.yview(END)
-        result_list.configure(state='disabled')
-
+    def show_info(values):
+        show_info_vacancies(root, packs, values[0])
 
     clear_packs(packs)
 
-    root.title('Выборка данных')
-    root.geometry(f'650x415+{(root.winfo_screenwidth() - 650) // 2}+{(root.winfo_screenheight() - 415) // 2}')
+    root.title('Обновление вакансии')
 
-    main_label = Label(root, text='Выполнить выборку данных (SELECT)', font='Arial 12 bold', bg='#CCCCFF')
+    form_frame = Frame(root, bg='#CCCCFF')
+    form_frame.pack(expand=True)
+    packs.append(form_frame)
+    y_size = 130
+
+    main_label = Label(root, text='Все вакансии', font='Arial 12 bold', bg='#CCCCEF')
     main_label.pack(pady=10)
     packs.append(main_label)
 
-    select_label = Label(root, text='Введите запрос на выборку', font='Arial 12 bold', bg='#CCCCFF')
-    select_label.pack(pady=10)
-    packs.append(select_label)
+    length = 0
+    columns = ('Title')
+    table = ttk.Treeview(columns=columns, show='headings')
+    table.pack()
+    packs.append(table)
 
-    select_entry = Entry(root, font='Arial 12', width=35)
-    select_entry.pack(pady=10)
-    packs.append(select_entry)
+    style = ttk.Style()
+    style.configure("Treeview", rowheight=50)
 
-    button_make_select = Button(root, text='SELECT', command=button_make_select_clicked)
-    button_make_select.pack(pady=10)
-    button_make_select.config(font='Arial 12 bold', bg='#CCCCFF')
-    packs.append(button_make_select)
+    table.tag_configure('data', background='#CCCCEF')
+    table.heading('Title', text='Название')
 
-    result_list = scrolledtext.ScrolledText(root, width=70, height=10)
-    result_list.pack()
-    packs.append(result_list)
+    table.column('#1', width=100)
+
+    query_select = "SELECT * FROM vacancy"
+    result = session.execute(query_select)
+    for row in result.all():
+        y_size += 50
+        length += 1
+
+        title = row[4]
+
+        parsed_record = (title)
+        table.insert('', END, values=parsed_record, tags=('data',))
+    table['height'] = length
+
+    root.geometry(f'600x{y_size}+{(root.winfo_screenwidth() - 600) // 2}+{(root.winfo_screenheight() - y_size) // 2}')
+
+    def item_selected(event):
+        selected_string = ''
+        for selected in table.selection():
+            item = table.item(selected)
+            string = item['values']
+            values = string
+            show_info(values)
+    table.bind("<<TreeviewSelect>>", item_selected)
 
     button_back_on_main_window(root, packs)
+
+#Показать таблицу вакансий
+def show_info_vacancies(root, packs, title):
+    def button_back_clicked():
+        select_window(root, packs)
+    
+    def button_candidate_clicked():
+        show_info_candidates_full(root, packs, title)
+    
+    def button_company_clicked():
+        show_info_company(root, packs, title)
+    
+    clear_packs(packs)
+
+    root.title('Полная информация о вакансии')
+
+    root.geometry(f'600x300+{(root.winfo_screenwidth() - 600) // 2}+{(root.winfo_screenheight() - 300) // 2}')
+
+    query = f"SELECT * FROM vacancy WHERE title='{title}'"
+    result = session.execute(query)
+    for row in result.all():
+        title = row[4]
+        description = row[1][:35]
+        salary = row[2]
+        status = row[3]
+
+    vacancy_label = Label(root, text=f'Title : {title}\nDescription : {description}...\nSalary : {salary}\nStatus : {status}', font='Arial 12', bg='#CCCCFF', justify='left')
+    vacancy_label.pack(pady=10)
+    packs.append(vacancy_label)
+
+    button_company = Button(root, text='Посмотреть информацию о компании', command=button_company_clicked)
+    button_company.pack(pady=10)
+    button_company.config(font='Arial 12 bold', bg='#CCCCFF')
+    packs.append(button_company)
+
+    button_candidate = Button(root, text='Посмотреть информацию о кандидатах', command=button_candidate_clicked)
+    button_candidate.pack(pady=10)
+    button_candidate.config(font='Arial 12 bold', bg='#CCCCFF')
+    packs.append(button_candidate)
+
+    button_back = Button(root, text='Вернуться назад', command=button_back_clicked)
+    button_back.pack(pady=10)
+    button_back.config(font='Arial 12 bold', bg='#CCCCFF')
+    packs.append(button_back)
+
+#Показать информацию о компании на вакансию
+def show_info_company(root, packs, title):
+    def button_back_clicked():
+        show_info_vacancies(root, packs, title)
+
+    root.title('Все компании текущей вакансии')
+
+    clear_packs(packs)
+
+    main_label = Label(root, text=f'Текущая вакансия : {title}', font='Arial 12 bold', bg='#CCCCFF')
+    main_label.pack(pady=10)
+    packs.append(main_label)
+
+    query_id = f"SELECT * FROM vacancy WHERE title='{title}'"
+    result_id = session.execute(query_id)
+    ids = [row[0] for row in result_id.all()]
+
+    query_select = f"SELECT * FROM employer WHERE vacancy_id={ids[0]}"
+    result = session.execute(query_select)
+    for row in result.all():
+        employer_title = row[3]
+        employer_description = row[2][:35]
+        employer_address = row[1]
+    
+    show_info = Label(root, text=f'Информация о компании:\nTitle : {employer_title}\nDescription : {employer_description}...\nAddress : {employer_address}', font='Arial 12', bg='#CCCCFF', justify='left')
+    show_info.pack(pady=10)
+    packs.append(show_info)
+
+    button_back = Button(root, text='Вернуться назад', command=button_back_clicked)
+    button_back.pack(pady=10)
+    button_back.config(font='Arial 12 bold', bg='#CCCCFF')
+    packs.append(button_back)
+
+#Показать таблицу о кандидатах на вакансию
+def show_info_candidates_full(root, packs, title):
+    def show_clicked(value):
+        show_info_candidate(root, packs, title, value[0])
+    
+    def button_back_clicked():
+        show_info_vacancies(root, packs, title)
+    
+    clear_packs(packs)
+
+    root.title('Все кандидаты на текущую вакансию')
+
+    main_label = Label(root, text=f'Текущая вакансия : {title}', font='Arial 12 bold', bg='#CCCCFF')
+    main_label.pack(pady=10)
+    packs.append(main_label)
+
+    y_size = 150
+    length = 0
+    columns = ('Name')
+    table = ttk.Treeview(columns=columns, show='headings')
+    table.pack()
+    packs.append(table)
+
+    style = ttk.Style()
+    style.configure("Treeview", rowheight=50)
+
+    table.tag_configure('data', background='#CCCCEF')
+    table.heading('Name', text='Имя')
+
+    table.column('#1', width=200)
+
+    query_select_id = f"SELECT id FROM vacancy WHERE title='{title}'"
+    result_id = session.execute(query_select_id)
+    ids = [row[0] for row in result_id.all()]
+
+    query_select = f"SELECT * FROM candidate WHERE vacancy_id={ids[0]}"
+    result = session.execute(query_select)
+    for row in result.all():
+        y_size += 50
+        length += 1
+
+        query_vacancy = f"SELECT title FROM vacancy WHERE id={row[4]}"
+        result_vacancy = session.execute(query_vacancy)
+        vacancy_title = [row_title[0] for row_title in result_vacancy.all()]
+        name = row[3],
+        parsed_record = (name)
+        table.insert('', END, values=parsed_record, tags=('data',))
+    table['height'] = length
+
+    root.geometry(f'500x{y_size}+{(root.winfo_screenwidth() - 500) // 2}+{(root.winfo_screenheight() - y_size) // 2}')
+
+    if(length == 0):
+        error_label = Label(root, text='Кандидатов на данную вакансию нет', font='Arial 12 bold', bg='#CCCCFF')
+        error_label.pack(pady=10)
+        packs.append(error_label)
+
+    root.geometry(f'400x{y_size}+{(root.winfo_screenwidth() - 400) // 2}+{(root.winfo_screenheight() - y_size) // 2}')
+
+    def item_selected(event):
+        selected_string = ''
+        for selected in table.selection():
+            item = table.item(selected)
+            string = item['values']
+            value = string
+            show_clicked(value)
+    table.bind("<<TreeviewSelect>>", item_selected)
+
+    button_back = Button(root, text='Вернуться назад', command=button_back_clicked)
+    button_back.pack(pady=10)
+    button_back.config(font='Arial 12 bold', bg='#CCCCFF')
+    packs.append(button_back)
+
+#Показать информацию о кандидате
+def show_info_candidate(root, packs, title, candidate_name):
+    def button_back_clicked():
+        show_info_candidates_full(root, packs, title)
+
+    clear_packs(packs)
+
+    root.title('Информация об определенном кандидате')
+
+    y_size = 300
+
+    main_label = Label(root, text=f'Текущая вакансия : {title}', font='Arial 12 bold', bg='#CCCCFF')
+    main_label.pack(pady=10)
+    packs.append(main_label)
+
+    main_name_label = Label(root, text=f'Текущий кандидат : {candidate_name}', font='Arial 12 bold', bg='#CCCCFF')
+    main_name_label.pack(pady=10)
+    packs.append(main_name_label)
+
+    query_select = f"SELECT * FROM candidate WHERE name='{candidate_name}'"
+    result = session.execute(query_select)
+
+    for row in result.all():
+        candidate_name = row[3]
+        candidate_gender = row[2]
+        candidate_date = row[1]
+    
+    info_label = Label(root, text=f'Информация о кандидате\nName : {candidate_name}\nGender : {candidate_gender}\nDate Of Birth : {candidate_date}', font='Arial 12', bg='#CCCCFF', justify='left')
+    info_label.pack(pady=10)
+    packs.append(info_label)
+
+    root.geometry(f'400x{y_size}+{(root.winfo_screenwidth() - 400) // 2}+{(root.winfo_screenheight() - y_size) // 2}')
+
+    button_back = Button(root, text='Вернуться назад', command=button_back_clicked)
+    button_back.pack(pady=10)
+    button_back.config(font='Arial 12 bold', bg='#CCCCFF')
+    packs.append(button_back)

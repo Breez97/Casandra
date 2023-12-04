@@ -17,6 +17,8 @@ vacancy_index_2 = "CREATE INDEX IF NOT EXISTS ON vacancy(status)"
 session.execute(vacancy_index_2)
 vacancy_index_3 = "CREATE INDEX IF NOT EXISTS ON vacancy(salary)"
 session.execute(vacancy_index_3)
+vacancy_index_4 = "CREATE INDEX IF NOT EXISTS ON vacancy(title)"
+session.execute(vacancy_index_4)
 
 create_candidate = "CREATE TABLE IF NOT EXISTS Candidate(ID UUID PRIMARY KEY,Vacancy_id UUID,Name varchar,Gender varchar,DateOfBirth date)"
 session.execute(create_candidate)
@@ -45,7 +47,7 @@ session.execute(employer_index_4)
 
 def gen_vacancy():
     ids = []
-    for i in range(0, 10):
+    for i in range(0, 5):
         while True:
             vacancy_id = uuid.uuid4()
             if vacancy_id not in ids:
@@ -64,7 +66,7 @@ def gen_employer():
     result = session.execute(query)
     vacancy_ids = [row[0] for row in result.all()]
     ids = []
-    for i in range(0, 7):
+    for i in range(0, 5):
         while True:
             employer_id = uuid.uuid4()
             if employer_id not in ids:
@@ -84,7 +86,7 @@ def gen_candidate():
     result = session.execute(query)
     vacancy_ids = [row[0] for row in result.all()]
     ids = []
-    for i in range(0, 10):
+    for i in range(0, 13):
         while True:
             candidate_id = uuid.uuid4()
             if candidate_id not in ids:

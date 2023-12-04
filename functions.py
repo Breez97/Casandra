@@ -44,18 +44,20 @@ def choose_vacancies():
 
 #Обработка запроса на выборку
 def query_processing(query):
-    query = query.lower()
-
     query_result = ''
     try:
         result = session.execute(query)
-        fields = result.one()._fields
+        if('WHERE' not in query):
+            fields = result.one()._fields
         number = 1
         for row in result.all():
             query_result += '----------------------------------------------\n'
             query_result += f'Number : {number}\n'
             for i in range(0, len(row)):
-                query_result += f'{fields[i]} : {row[i]}\n'
+                if('WHERE' not in query):
+                    query_result += f'{fields[i]} : {row[i]}\n'
+                else:
+                    query_result += f'{row[i]}\n'
             number += 1
     except Exception as error:
         query_result += f'Ошибка: {error}'
